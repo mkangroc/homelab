@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 880" width="980" height="880" role="img" aria-label="Homelab network architecture diagram">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#57606a"/>
+    </marker>
+    <style>
+      .t    { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #1f2328; }
+      .m    { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #57606a; }
+      .box  { fill: #f6f8fa; stroke: #d0d7de; stroke-width: 1.5; rx: 8; }
+      .accent { fill: #ddf4ff; stroke: #54aeff; stroke-width: 2; rx: 8; }
+      .zoneS { fill: #dafbe1; stroke: #4ac26b; stroke-width: 2; rx: 10; }
+      .zoneV { fill: #fff8c5; stroke: #d4a72c; stroke-width: 2; rx: 10; }
+      .ln   { stroke: #57606a; stroke-width: 2; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="980" height="880" fill="#ffffff"/>
+
+  <text class="t" x="40" y="42" font-size="21" font-weight="700">Homelab Network Architecture</text>
+  <text class="m" x="40" y="66" font-size="13">Addresses use RFC 5737 documentation ranges. Hostnames and credentials omitted.</text>
+
+  <!-- Internet -->
+  <rect class="box" x="330" y="96" width="320" height="56"/>
+  <text class="t" x="490" y="120" font-size="15" font-weight="600" text-anchor="middle">Internet</text>
+  <text class="m" x="490" y="139" font-size="12" text-anchor="middle">FiOS ONT · ethernet WAN handoff</text>
+
+  <path class="ln" d="M 490 152 L 490 190"/>
+
+  <!-- OPNsense -->
+  <rect class="accent" x="280" y="194" width="420" height="118"/>
+  <text class="t" x="490" y="221" font-size="16" font-weight="700" text-anchor="middle">OPNsense router / firewall</text>
+  <text class="m" x="490" y="241" font-size="12" text-anchor="middle">192.0.2.1 — repurposed desktop, dual-port NIC</text>
+  <text class="m" x="302" y="266" font-size="12.5">·  DHCP for all zones</text>
+  <text class="m" x="302" y="285" font-size="12.5">·  Unbound DNS with blocklist filtering</text>
+  <text class="m" x="302" y="304" font-size="12.5">·  Zone-based firewall policy (server / client / egress)</text>
+
+  <path class="ln" d="M 490 312 L 490 350"/>
+
+  <!-- G3100 -->
+  <rect class="box" x="330" y="354" width="320" height="66"/>
+  <text class="t" x="490" y="380" font-size="14.5" font-weight="600" text-anchor="middle">G3100 — AP / bridge mode</text>
+  <text class="m" x="490" y="400" font-size="12" text-anchor="middle">Wi-Fi + switch ports, routing disabled</text>
+
+  <!-- fork -->
+  <path class="ln" d="M 430 420 L 430 468 L 350 468"/>
+  <path class="ln" d="M 550 420 L 550 468 L 700 468"/>
+
+  <text class="m" x="300" y="451" font-size="11.5">LAN</text>
+  <text class="m" x="590" y="451" font-size="11.5">coax (MoCA)</text>
+
+  <!-- SERVER ZONE -->
+  <rect class="zoneS" x="46" y="452" width="330" height="368"/>
+  <text class="t" x="211" y="480" font-size="13" font-weight="700" text-anchor="middle">SERVER ZONE</text>
+
+  <rect class="box" x="70" y="496" width="282" height="150"/>
+  <text class="t" x="211" y="520" font-size="14" font-weight="600" text-anchor="middle">Debian mini PC · 192.0.2.20</text>
+  <text class="m" x="88" y="544" font-size="12">·  Docker host</text>
+  <text class="m" x="88" y="563" font-size="12">·  20 containers / 9 Compose stacks</text>
+  <text class="m" x="88" y="582" font-size="12">·  Caddy reverse proxy + internal CA</text>
+  <text class="m" x="88" y="601" font-size="12">·  Tailscale node</text>
+  <text class="m" x="88" y="620" font-size="12">·  SSH / Bash / cron / systemd</text>
+
+  <rect class="box" x="70" y="662" width="282" height="140"/>
+  <text class="m" x="211" y="686" font-size="12.5" font-weight="600" text-anchor="middle">Services (TLS via Caddy, internal CA)</text>
+  <text class="m" x="88" y="710" font-size="11.5">Immich · Vaultwarden · Nextcloud</text>
+  <text class="m" x="88" y="730" font-size="11.5">Jellyfin · Navidrome · Open WebUI</text>
+  <text class="m" x="88" y="750" font-size="11.5">SearXNG · Stirling PDF · Uptime Kuma</text>
+  <text class="m" x="88" y="780" font-size="11.5" font-style="italic">All container traffic on the shared external</text>
+  <text class="m" x="88" y="796" font-size="11.5" font-style="italic">Docker network; no ports bound to 0.0.0.0</text>
+
+  <!-- RIGHT: MoCA / VPN ZONE -->
+  <rect class="box" x="700" y="452" width="234" height="72"/>
+  <text class="t" x="817" y="478" font-size="13.5" font-weight="600" text-anchor="middle">MoCA adapter</text>
+  <text class="m" x="817" y="498" font-size="11.5" text-anchor="middle">coax → ethernet, bedroom</text>
+
+  <path class="ln" d="M 817 524 L 817 566"/>
+
+  <rect class="zoneV" x="620" y="570" width="314" height="150"/>
+  <text class="t" x="777" y="596" font-size="13" font-weight="700" text-anchor="middle">EGRESS ZONE (VPN)</text>
+
+  <rect class="box" x="638" y="608" width="278" height="98"/>
+  <text class="t" x="777" y="630" font-size="13.5" font-weight="600" text-anchor="middle">GL.iNet router · 192.0.2.162</text>
+  <text class="m" x="656" y="652" font-size="11.5">·  Downstream router (NAT)</text>
+  <text class="m" x="656" y="670" font-size="11.5">·  Client-based NordVPN profiles</text>
+  <text class="m" x="656" y="688" font-size="11.5">·  Policy-based routing per device</text>
+
+  <path class="ln" d="M 777 720 L 777 762"/>
+
+  <rect class="box" x="652" y="766" width="250" height="52"/>
+  <text class="t" x="777" y="790" font-size="13.5" font-weight="600" text-anchor="middle">Fedora workstation</text>
+  <text class="m" x="777" y="807" font-size="11.5" text-anchor="middle">selected egress via tunnel</text>
+
+  <!-- LAN-reachability callout -->
+  <path d="M 430 468 L 430 468" />
+  <path stroke="#d4a72c" stroke-width="2" stroke-dasharray="5 4" fill="none" d="M 550 440 L 700 440"/>
+  <text class="m" x="625" y="434" font-size="11" text-anchor="middle">same L2 broadcast domain</text>
+</svg>
