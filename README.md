@@ -49,18 +49,6 @@ Full reasoning for each layer is in
 5. **Per-device egress selection.** Client-side policy routing sends chosen devices
    through a VPN tunnel while leaving the rest direct.
 
-## What is deliberately not in this repository
-
-Secrets, credentials, private keys, firewall rule exports, and live host configuration.
-The templates under [`examples/`](examples/) are sanitized: every credential is
-externalized to an environment variable and every address uses RFC 5737 documentation
-ranges (`192.0.2.0/24`).
-
-`.gitignore` excludes `.env` files, private keys, database dumps, and application data.
-Before the initial commit, secret scanning (`gitleaks`) was run over the live
-configuration to build that exclusion list — it identified a private key and a database
-dump containing a VPN key, which is why the patterns are as broad as they are.
-
 ## Repository layout
 
 ```
