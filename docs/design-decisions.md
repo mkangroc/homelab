@@ -35,7 +35,7 @@ firewall rules:
 | Interface | What's on it | Address range |
 |---|---|---|
 | **LAN** | My main network — computers, phone, the server | `192.168.1.0/24` |
-| **TAILSCALE** | Devices connecting in from outside the house | 100.64.0.0/10 |
+| **TAILSCALE** | Devices connecting in from outside the house | `100.64.0.0/10` |
 | **WAN** | The internet-facing side | from the ISP |
 
 
