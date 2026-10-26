@@ -2,7 +2,7 @@
 
 A self-hosted network and service platform I designed, built, and operate on repurposed
 hardware. This repository documents the **architecture and the design decisions** behind
-it — not the running configuration.
+it.
 
 Everything here runs continuously: a segmented home network with a dedicated firewall,
 20 containers across 9 Compose stacks, a private certificate authority, and remote access
@@ -14,11 +14,7 @@ over a mesh VPN.
 
 ![Network architecture](docs/architecture.svg)
 
-**Shape of the network:** the ISP handoff terminates at a dedicated OPNsense
-router/firewall, which owns DHCP, DNS, and the zone policy. The ISP gateway is demoted
-to access-point/bridge mode. Behind it sits a server zone (the Docker host), a client
-zone, and a separate egress zone reached over the building's existing coax via a MoCA
-bridge — where a downstream router applies per-device VPN policy.
+**Shape of the network:** the ISP handoff terminates at a dedicated OPNsense router/firewall, which controls DHCP and DNS. The ISP gateway (FiOS G3100) is demoted to access-point (AP)/bridge mode. Behind it sits a server zone (Docker host) and a separate egress zone reached over the building’s existing coax via a MoCA bridge – where a downstream router applies per-device VPN policy.
 
 Full reasoning for each layer is in
 [`docs/design-decisions.md`](docs/design-decisions.md).
