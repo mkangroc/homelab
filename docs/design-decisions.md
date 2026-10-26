@@ -35,18 +35,9 @@ firewall rules:
 | Interface | What's on it | Address range |
 |---|---|---|
 | **LAN** | My main network — computers, phone, the server | `192.168.1.0/24` |
-| **TAILSCALE** | Devices connecting in from outside the house | — |
+| **TAILSCALE** | Devices connecting in from outside the house | 100.64.0.0/10 |
 | **WAN** | The internet-facing side | from the ISP |
 
-**Why:** on a single flat network, a device that gets compromised has a clear path to
-every other device, including the server. Putting the camera base station on its own
-interface and its own address range means it isn't on the same network as my computers
-and my server. That's the whole point — the default is that devices can't reach each
-other, and anything that can is something I allowed on purpose.
-
-**The cost:** inter-device access now has to be deliberate, and when something can't
-connect, the reason is usually a rule I wrote — which makes troubleshooting slower than
-on a flat network. That's the tradeoff, and it's the one I wanted.
 
 ---
 
