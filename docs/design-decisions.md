@@ -35,7 +35,6 @@ firewall rules:
 | Interface | What's on it | Address range |
 |---|---|---|
 | **LAN** | My main network — computers, phone, the server | `192.168.1.0/24` |
-| **ARLO_BASE_STATION** | Only the camera base station | `192.168.10.0/24` |
 | **TAILSCALE** | Devices connecting in from outside the house | — |
 | **WAN** | The internet-facing side | from the ISP |
 
