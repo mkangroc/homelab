@@ -35,16 +35,16 @@ The reasoning behind each of those choices is in
 
 ## Design highlights
 
-1. **Separate networks instead of one flat network.** The main network, the camera base
-   station, and remote-access devices each get their own interface with their own rules,
+1. **Separate networks instead of one flat network.** The main network and remote-access
+   devices each get their own interface with their own rules,
    so a device on one isn't automatically able to reach the others.
-2. **Local DNS with blocklists.** Name lookups happen on my router, so no outside company
+3. **Local DNS with blocklists.** Name lookups happen on my router, so no outside company
    gets a list of every site my network visits, and the blocklists apply to every device
    without installing anything on them.
-3. **Reusing the coax already in the walls.** The room I wanted on the network had coax
+4. **Reusing the coax already in the walls.** The room I wanted on the network had coax
    run to it but no network cable, so I used MoCA adapters — ethernet over coax — instead
    of running new cable through a finished wall.
-4. **Per-device VPN choice.** Devices I select route through a VPN; everything else goes
+5. **Per-device VPN choice.** Devices I select route through a VPN; everything else goes
    out directly.
 
 ## Repository layout
