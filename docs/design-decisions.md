@@ -9,7 +9,7 @@ not published.
 ## Constraints I was designing within
 
 - **No new cabling.** The building's coax was already run; ethernet to the far room was not.
-- **Repurposed hardware.** The router is an old desktop with a dual-port NIC, not an appliance.
+- **Repurposed hardware.** The router is an old Dell Inspiron Desktop with a dual-port NIC, not an appliance.
 - **One physical server.** Capacity and power budget live on a single mini PC.
 - **No inbound ports.** Nothing should be reachable from the internet by default.
 
