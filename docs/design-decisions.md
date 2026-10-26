@@ -1,110 +1,160 @@
 # Design Decisions
 
-This document records **why** the network is built the way it is, what broke along
-the way, and what I would change.
+Why the network is built the way it is, and what went wrong while building it.
 
 ---
 
-## Constraints I was designing within
+## Constraints I was working within
 
-- **No new cabling.** The building's coax was already run; ethernet to the far room was not.
-- **Repurposed hardware.** The router is an old desktop with a dual-port NIC, not an appliance.
-- **One physical server.** Capacity and power budget live on a single mini PC.
-- **No inbound ports.** Nothing should be reachable from the internet by default.
-
----
-
-## 1. Dedicated router/firewall instead of the ISP gateway
-
-The ISP gateway can route and hand out DHCP, but it offers very little visibility
-or policy control. I put an **OPNsense** box in front of it and demoted the gateway
-to access-point/bridge mode.
+- **No new cabling.** The far room had coax already run to it, but no network cable.
+- **Repurposed hardware.** The router is an old desktop, not a dedicated appliance.
+- **One physical server.** Everything runs on a single mini PC.
+- **Nothing exposed to the internet.** No service should be reachable from outside by default.
 
 ---
 
-## 2. Zone segmentation instead of one flat LAN
+## 1. My own router instead of the ISP's gateway
 
-Devices sit in separate zones with distinct firewall policy rather than sharing
-one trust domain:
+The gateway from my ISP can route and hand out addresses, but it gives almost no
+visibility or control. I put an **OPNsense** box in front of it and turned the ISP
+gateway into an access point — it now only provides Wi-Fi and switch ports, and does
+no routing.
 
-- **Server zone** — the mini PC and its services.
-- **Client zone** — workstations, phones, tablets.
-- **Egress zone** — the policy-routed segment described in section 5.
-
----
-
-## 3. Local DNS with blocklist filtering (Unbound)
-
-Resolution runs on the router via **Unbound**, with blocklists applied.
-
-Two reasons. First, no third-party resolver sees a log of every domain
-requested on the network. Second, filtering happens at the resolver, so it applies
-to every device without per-device configuration or an agent.
+**Why:** the interesting part of a home network isn't the connection, it's deciding
+which device is allowed to talk to which other device, and being able to see what's
+happening. A consumer gateway hides all of that.
 
 ---
 
-## 4. Coax as the layer-2 backhaul to the far room
+## 2. Separate networks instead of one flat network
 
-The far room had coax already run to it. Rather than pull new cable, I used
-**MoCA** (ethernet over coax) to extend the LAN there.
+Instead of every device sharing one network where anything can reach anything else,
+I set up separate interfaces on the router, each with its own address range and its own
+firewall rules:
 
-**Important consequence I did not anticipate:** the MoCA segment is not a separate
-network. It is *bridged into the same broadcast domain* as the main LAN. I initially
-reasoned about the far-room router as though it were on its own uplink; it is
-actually layer-2 adjacent to everything on the LAN. 
+| Interface | What's on it | Address range |
+|---|---|---|
+| **LAN** | My main network — computers, phone, the server | `192.168.1.0/24` |
+| **ARLO_BASE_STATION** | Only the camera base station | `192.168.10.0/24` |
+| **TAILSCALE** | Devices connecting in from outside the house | — |
+| **WAN** | The internet-facing side | from the ISP |
+
+**Why:** on a single flat network, a device that gets compromised has a clear path to
+every other device, including the server. Putting the camera base station on its own
+interface and its own address range means it isn't on the same network as my computers
+and my server. That's the whole point — the default is that devices can't reach each
+other, and anything that can is something I allowed on purpose.
+
+**The cost:** inter-device access now has to be deliberate, and when something can't
+connect, the reason is usually a rule I wrote — which makes troubleshooting slower than
+on a flat network. That's the tradeoff, and it's the one I wanted.
 
 ---
 
-## 5. Policy-based routing on a downstream router
+## 3. Local DNS with blocklist filtering
 
-I wanted **per-device egress selection** — choose which devices exit through a VPN
-tunnel and which go direct — so I put a **GL.iNet** router in the far room and
-configured client-based VPN profiles with policy routing.
+Name lookups (turning a website name into an address) run on my router using
+**Unbound**, with blocklists applied.
 
-### What the topology actually is
+**Two reasons.** First, no outside company gets a log of every site my network visits.
+Second, filtering happens at the router, so it applies to every device automatically —
+no per-device setup, no software installed on phones or laptops.
 
-The GL.iNet's "WAN" port is fed from the MoCA adapter, and its WAN address is an
-address **inside the main LAN subnet**. That means:
+**The cost:** I now maintain the DNS resolver myself. When a blocklist is too
+aggressive, sites break in ways that look like a network problem but aren't.
+
+---
+
+## 4. Using the coax already in the wall
+
+The room I wanted on the network had coax run to it, but no network cable. Rather than
+open up a finished wall, I used **MoCA adapters** — ethernet over coax — to get a
+network connection there.
+
+**What I got wrong at first:** I assumed the coax was effectively its own separate
+connection. It isn't. The adapters join that room to the *same* network as the rest of
+the house, just over a different kind of cable. That misunderstanding cost me real
+troubleshooting time later, described in the next section.
+
+---
+
+## 5. The VPN router in the far room
+
+I wanted to choose which devices go out through a VPN and which go out directly, rather
+than putting the whole house behind one. So I put a **GL.iNet** router in the far room
+and set it to route chosen devices through a VPN while the rest go out normally.
+
+### What's actually happening
+
+The GL.iNet's "WAN" port is plugged into my own network, not into the internet. Its
+address is an address *inside* my LAN. So a device behind it gets its traffic translated
+twice — once by the GL.iNet, and again by the main OPNsense router on the way out:
 
 ```
-Workstation PC → GL.iNet (NAT #1) → MoCA bridge → gateway → OPNsense (NAT #2) → ONT → internet
+far-room PC → GL.iNet → coax adapters → OPNsense → internet
 ```
 
-It is **double NAT on a single ingress path**. 
+It is **two routers in a row on one connection**. I had assumed it was a second,
+independent internet feed. Checking the address tables and tracing the route is what
+settled it.
 
-### The problem this created
+### The problem this caused
 
-Devices behind the GL.iNet could reach the internet normally, but could **not** reach
-services on the mini PC — unless a mesh VPN client (Tailscale) was running on the GL.iNet.
+Devices behind the GL.iNet could reach the internet fine, but **couldn't reach the
+services on my server** — unless Tailscale was running on the GL.iNet.
 
-At first I assumed the fix was to switch the GL.iNet to access-point mode. That
-would have worked, and it would also have **terminated the entire feature**.
+My first guess was to switch the GL.iNet to access-point mode. That would have fixed the
+connection, and it would also have **destroyed the thing I built it for**: choosing
+which devices use the VPN is something a router does. An access point just passes
+traffic along — it has no way to send different devices down different paths. Fixing the
+symptom that way would have silently removed the feature.
+
+**What was actually happening:** traffic going from devices behind the GL.iNet to my
+server isn't leaving the network — it's headed for a private address on the other side
+of the GL.iNet's upstream port. Two things worked against it:
+
+1. The GL.iNet had no rule allowing traffic to come back in from its upstream port
+   toward its own devices, so that traffic was dropped by default.
+2. Its VPN routing rule didn't exclude my own network's address range, so traffic
+   meant for my server was being sent into the VPN tunnel instead of straight there.
+
+Tailscale masked the problem because it added a second path that skipped the GL.iNet's
+rules entirely.
+
+**The fix** (not yet applied): exclude my LAN's address range from the VPN routing rule
+so local traffic never enters the tunnel, and add one narrow rule allowing the GL.iNet's
+upstream port to reach my server's address. Both are small; the hard part was working
+out what was wrong.
+
+**Why I haven't applied it yet:** the workaround works, that segment is isolated by
+design, and the change touches the routing on the one part of the network I depend on.
+I'd rather make it deliberately than in a hurry.
 
 ---
 
-## 6. TLS on internal services via a private CA
+## 6. Remote access without opening any ports
 
-Every service sits behind **Caddy** with TLS, including services never exposed to the
-internet, using a locally generated certificate authority.
+Remote access uses **Tailscale** rather than forwarding a port from my router.
 
-The alternative is plaintext HTTP on the LAN, which means credentials cross
-the network in the clear. One service in particular (Vaultwarden) genuinely
-requires a secure context — its web vault depends on browser Web Crypto, which is
-unavailable over plain HTTP. TLS wasn't optional there.
+**Why:** forwarding a port puts a service on the public internet and makes every
+scanner out there my problem. Tailscale means there's no inbound opening at all —
+a device has to be added to the network before it can reach anything. It also keeps
+working even if my ISP changes my address, which port forwarding does not.
 
----
-
-## 7. One Compose stack per service, one shared external network
-
-Services are grouped into **9 Docker Compose stacks** on a single shared, externally
-defined Docker network, with persistent volumes and health checks.
-
-I chose a per-service approach because they can be rebuilt, backed up, or taken down without
-touching its neighbours. One giant compose file couples everything's lifecycle
-together.
+**The cost:** access depends on Tailscale's service being up, and each device needs
+the app installed.
 
 ---
 
-## 8. Mesh VPN for remote access instead of port forwarding
+## 7. Separating services into their own Docker Compose files
 
-Remote access uses **Tailscale** rather than exposing services through port forwards.
+Rather than one giant configuration file for everything, each service has its own
+Docker Compose file, and they share a common Docker network. Service data is stored
+outside the containers so replacing or rebuilding one never risks the data.
+
+**Why separate files:** a service can be updated, restarted, or taken down without
+touching anything else. One big file ties every service's fate together.
+
+**Where the passwords live:** not in the Compose files. Each service reads its
+credentials from its own `.env` file, which is excluded from this repository. The
+templates under [`examples/`](../examples/) show the structure with the values removed.

@@ -1,12 +1,10 @@
 # Homelab Network & Service Infrastructure
 
-A self-hosted network and service platform I designed, built, and operate on repurposed
-hardware. This repository documents the **architecture and the design decisions** behind
-it.
+A home network and self-hosted service setup I designed, built, and run on repurposed
+hardware. This repository documents the **architecture and the reasoning behind it**.
 
-Everything here runs continuously: a segmented home network with a dedicated firewall,
-20 containers across 9 Compose stacks, a private certificate authority, and remote access
-over a mesh VPN.
+Everything here runs continuously: a home network with its own firewall, several
+self-hosted services, and remote access from outside the house.
 
 ---
 
@@ -14,40 +12,40 @@ over a mesh VPN.
 
 ![Network architecture](docs/architecture.svg)
 
-**Shape of the network:** the ISP handoff terminates at a dedicated OPNsense router/firewall, which controls DHCP and DNS. The ISP gateway (FiOS G3100) is demoted to access-point (AP)/bridge mode. Behind it sits a server zone (Docker host) and a separate egress zone reached over the building’s existing coax via a MoCA bridge – where a downstream router applies per-device VPN policy.
+**How it fits together:** my internet connection comes into an **OPNsense** box I built
+from an old desktop, which became the router and firewall for the whole network. The
+ISP's own gateway was demoted to access-point mode — it only provides Wi-Fi and switch
+ports now, it doesn't route. Behind that, devices sit on separate network interfaces
+with their own rules. A room on the far side of the house is reached using the coax
+cable already in the walls, and the router in that room can send chosen devices through
+a VPN.
 
-Full reasoning for each layer is in
+The reasoning behind each of those choices is in
 [`docs/design-decisions.md`](docs/design-decisions.md).
 
 ## Stack
 
 | Service | Role | Notes |
 |---|---|---|
-| **OPNsense** | Router / firewall | Zone segmentation, DHCP, Unbound DNS with blocklists |
-| **Caddy** | Reverse proxy | TLS for every service via an internal certificate authority |
-| **Tailscale** | Remote access | Off-LAN access without exposing any inbound port |
-| **Immich** | Photo & video backup | 4 containers: server, ML inference, Valkey, PostgreSQL |
-| **Vaultwarden** | Password manager | Self-hosted; requires HTTPS for the web vault's Web Crypto API |
-| **Nextcloud** | File sync | MariaDB + Redis backing services |
-| **Jellyfin / Navidrome** | Media | `/dev/dri` passthrough for hardware transcoding |
-| **Open WebUI** | Local LLM front end | Talks to Ollama; per-model workspaces |
-| **SearXNG** | Search | Self-hosted metasearch |
-| **Stirling PDF** | Document tooling | Local PDF manipulation |
-| **Uptime Kuma** | Monitoring | Availability checks across the stack |
-| **GL.iNet + NordVPN** | Policy-routed segment | Per-device egress selection |
+| **OPNsense** | Router / firewall | Runs DHCP and DNS for my whole network, with blocklists applied |
+| **Tailscale** | Remote access | Lets me reach my services from outside the house without opening any ports to the internet |
+| **Immich** | Photo & video backup | Self-hosted replacement for a paid cloud photo service; backs up automatically from my phone |
+| **Open WebUI** | Local AI chat | A chat interface for language models running on my own hardware |
+| **GL.iNet + NordVPN** | Separate network segment | Sends the devices I choose through a VPN while everything else goes out directly |
 
 ## Design highlights
 
-1. **Zone segmentation over a flat network.** Servers, clients, and a policy-routed
-   segment sit behind distinct firewall policies rather than one trust domain.
-2. **Local DNS with blocklist filtering.** Resolution stays on-network; no third-party
-   resolver sees the query log.
-3. **TLS everywhere, including internal services.** A private CA issues certificates for
-   services that never touch the public internet.
-4. **Reusing existing coax for a second network segment.** A MoCA bridge extends the
-   LAN to a physically distant room without running new cable.
-5. **Per-device egress selection.** Client-side policy routing sends chosen devices
-   through a VPN tunnel while leaving the rest direct.
+1. **Separate networks instead of one flat network.** The main network, the camera base
+   station, and remote-access devices each get their own interface with their own rules,
+   so a device on one isn't automatically able to reach the others.
+2. **Local DNS with blocklists.** Name lookups happen on my router, so no outside company
+   gets a list of every site my network visits, and the blocklists apply to every device
+   without installing anything on them.
+3. **Reusing the coax already in the walls.** The room I wanted on the network had coax
+   run to it but no network cable, so I used MoCA adapters — ethernet over coax — instead
+   of running new cable through a finished wall.
+4. **Per-device VPN choice.** Devices I select route through a VPN; everything else goes
+   out directly.
 
 ## Repository layout
 
@@ -55,8 +53,8 @@ Full reasoning for each layer is in
 .
 ├── README.md
 ├── docs/
-│   ├── architecture.svg      rendered network diagram
-│   └── design-decisions.md   the "why" behind each choice
+│   ├── architecture.svg      network diagram
+│   └── design-decisions.md   why each choice was made
 └── examples/                 sanitized Compose templates
     ├── open-webui/
     ├── vaultwarden/
