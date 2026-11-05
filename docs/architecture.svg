@@ -32,7 +32,7 @@
   <text class="m" x="490" y="241" font-size="12" text-anchor="middle">192.X.X.1 — repurposed desktop, dual-port NIC</text>
   <text class="m" x="302" y="266" font-size="12.5">·  DHCP for all zones</text>
   <text class="m" x="302" y="285" font-size="12.5">·  Unbound DNS with blocklist filtering</text>
-  <text class="m" x="302" y="304" font-size="12.5">·  Zone-based firewall policy (server / client / egress)</text>
+  <text class="m" x="302" y="304" font-size="12.5">·  Zone-based firewall policy</text>
 
   <path class="ln" d="M 490 312 L 490 350"/>
 
@@ -45,7 +45,7 @@
   <path class="ln" d="M 430 420 L 430 468 L 350 468"/>
   <path class="ln" d="M 550 420 L 550 468 L 700 468"/>
 
-  <text class="m" x="300" y="451" font-size="11.5">LAN</text>
+  <text class="m" x="387" y="456" font-size="11.5">LAN</text>
   <text class="m" x="590" y="451" font-size="11.5">coax (MoCA)</text>
 
   <!-- SERVER ZONE -->
@@ -56,11 +56,11 @@
   <text class="t" x="211" y="520" font-size="14" font-weight="600" text-anchor="middle">Debian mini PC · 192.X.X.2</text>
   <text class="m" x="88" y="544" font-size="12">·  Docker host</text>
   <text class="m" x="88" y="563" font-size="12">·  Tailscale node</text>
-  <text class="m" x="88" y="601" font-size="12">·  SSH / Bash / cron / systemd</text>
+  <text class="m" x="88" y="582" font-size="12">·  SSH / Bash / cron / systemd</text>
 
   <rect class="box" x="70" y="662" width="282" height="140"/>
   <text class="m" x="211" y="686" font-size="12.5" font-weight="600" text-anchor="middle">Self-hosted services</text>
-  <text class="m" x="88" y="710" font-size="11.5">Immich · Vaultwarden · Nextcloud</text>
+  <text class="m" x="88" y="710" font-size="11.5">Immich · Vaultwarden · Nextcloud · Caddy</text>
   <text class="m" x="88" y="730" font-size="11.5">Jellyfin · Navidrome · Open WebUI</text>
   <text class="m" x="88" y="750" font-size="11.5">SearXNG · Stirling PDF · Uptime Kuma</text>
 
